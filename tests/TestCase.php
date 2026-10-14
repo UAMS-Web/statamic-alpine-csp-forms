@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace UAMSWeb\AddonTemplate\Tests;
+namespace UAMSWeb\AlpineCspForms\Tests;
 
 use Illuminate\Foundation\Application;
 use Statamic\Testing\AddonTestCase;
-use UAMSWeb\AddonTemplate\ServiceProvider;
+use UAMSWeb\AlpineCspForms\ServiceProvider;
 
 /**
  * Base class for the Integration suite: boots a minimal Statamic through

@@ -1,0 +1,252 @@
+// @vitest-environment jsdom
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import Alpine from '@alpinejs/csp';
+
+import { registerShowFieldMagic } from './showFieldMagic.js';
+
+/**
+ * Integration coverage for the `$showField` magic against the REAL
+ * `@alpinejs/csp` runtime (#1859).
+ *
+ * The magic exists because the CSP build's AST interpreter refuses the
+ * expression Statamic's stock Alpine driver emits. Stubbing Alpine here would
+ * assert nothing about that refusal, so these boot the actual interpreter and
+ * evaluate the actual attribute strings `UAMSWeb\AlpineCspForms\JsDrivers\AlpineCsp` renders
+ * — including a negative control proving the stock expression still fails.
+ */
+
+/** The expression AlpineCsp emits for a conditional field. */
+const EMITTED = `$showField({"if":{"referrer":"equals René"}}, $data, 'referrer_note')`;
+
+/** The expression Statamic's stock `alpine` driver emits for the same field. */
+const STOCK = `Statamic.$conditions.showField({"if":{"referrer":"equals René"}}, $data, 'referrer_note')`;
+
+// Register once — magics live on a module-level registry, and re-registering
+// the same name in each test would just overwrite it.
+registerShowFieldMagic(Alpine);
+
+/**
+ * Mount an element carrying an Alpine data scope, ready for `Alpine.evaluate`.
+ *
+ * @param {Record<string, unknown>} data  The reactive scope the expression reads.
+ * @returns {HTMLElement}
+ */
+function scopedElement(data = { referrer: 'René' }) {
+	const el = document.createElement('div');
+	document.body.appendChild(el);
+	Alpine.addScopeToNode(el, Alpine.reactive(data));
+
+	return el;
+}
+
+/**
+ * Evaluate an expression through the CSP interpreter, capturing any Alpine
+ * expression error rather than letting it escape on a deferred throw.
+ *
+ * @param {HTMLElement} el
+ * @param {string} expression
+ * @returns {{ value: unknown, error: Error | null }}
+ */
+/**
+ * The handler every test runs under unless it is deliberately capturing.
+ *
+ * Alpine's default handler `console.warn`s and re-throws from a `setTimeout`,
+ * which Vitest cannot attribute to the test that caused it — an expression
+ * error would look like a passing test plus unexplained console noise. Throwing
+ * synchronously instead makes any unexpected expression error red, and red in
+ * the right test.
+ */
+function throwOnExpressionError(error) {
+	throw error;
+}
+
+function evaluateCapturingError(el, expression) {
+	let error = null;
+	Alpine.setErrorHandler((e) => { error = e; });
+
+	try {
+		return { value: Alpine.evaluate(el, expression), error };
+	} finally {
+		// Alpine's handler is module-global and `setErrorHandler` returns
+		// nothing, so restore the known default rather than leaving a swallowing
+		// handler installed for whatever runs next. `beforeEach` sets the same
+		// one, so no test can inherit another's capture.
+		Alpine.setErrorHandler(throwOnExpressionError);
+	}
+}
+
+beforeEach(() => {
+	document.body.innerHTML = '';
+
+	// Present ONLY so the stock-expression negative control below fails on the
+	// CSP scope rule rather than on a missing global. Nothing in the evaluated
+	// path reads it any more — #1956 moved the evaluator in-repo and dropped
+	// the vendor bundle that used to define it.
+	window.Statamic = { $conditions: {} };
+
+	Alpine.setErrorHandler(throwOnExpressionError);
+});
+
+afterEach(() => {
+	delete window.Statamic;
+});
+
+describe('the CSP interpreter and the emitted expression', () => {
+	it('evaluates the expression AlpineCsp emits', () => {
+		const el = scopedElement();
+
+		const { value, error } = evaluateCapturingError(el, EMITTED);
+
+		expect(error).toBeNull();
+		expect(value).toBe(true);
+	});
+
+	it('carries the non-ASCII condition value through the tokenizer intact', () => {
+		// Asserted through the real evaluator rather than a spy's arguments: if
+		// the `é` were mangled anywhere between the attribute and the
+		// comparison, `equals René` would stop matching a scope value of
+		// `René`. This is why AlpineCsp encodes with JSON_UNESCAPED_UNICODE.
+		expect(evaluateCapturingError(scopedElement({ referrer: 'René' }), EMITTED).value).toBe(true);
+		expect(evaluateCapturingError(scopedElement({ referrer: 'Rene' }), EMITTED).value).toBe(false);
+	});
+
+	it('reads `$data` as the live Alpine scope', () => {
+		const data = Alpine.reactive({ referrer: 'someone else' });
+		const el = document.createElement('div');
+		document.body.appendChild(el);
+		Alpine.addScopeToNode(el, data);
+
+		expect(evaluateCapturingError(el, EMITTED).value).toBe(false);
+
+		// Whatever the visitor has typed by now is what gets compared.
+		data.referrer = 'René';
+
+		expect(evaluateCapturingError(el, EMITTED).value).toBe(true);
+	});
+
+	it('honors the third argument, the field path', () => {
+		// A dotted path scopes the lookup to the field's parent, so the same
+		// conditions and the same data resolve differently depending on it.
+		// Passing the path through unchanged is what makes that work.
+		const nested = { set: { referrer: 'René' } };
+
+		const scoped = `$showField({"if":{"referrer":"equals René"}}, $data, 'set.referrer_note')`;
+		const unscoped = `$showField({"if":{"referrer":"equals René"}}, $data, 'referrer_note')`;
+
+		expect(evaluateCapturingError(scopedElement(nested), scoped).value).toBe(true);
+		expect(evaluateCapturingError(scopedElement(nested), unscoped).value).toBe(false);
+	});
+
+	it('rejects the expression the stock alpine driver emits', () => {
+		// ---
+		// The negative control. `window.Statamic` is set in beforeEach, so this
+		// fails on the CSP scope rule rather than on a missing global — which is
+		// exactly the blocker that deferred this ticket the first time. If this
+		// ever goes green, Statamic fixed it upstream and AlpineCsp can retire.
+		// ---
+		const el = scopedElement();
+
+		const { error } = evaluateCapturingError(el, STOCK);
+
+		expect(error).not.toBeNull();
+		expect(error.message).toContain('Undefined variable: Statamic');
+	});
+
+	it('mangles a \\uXXXX escape, which is why the driver stops emitting them', () => {
+		// ---
+		// The second negative control. PHP's json_encode escapes non-ASCII as
+		// \uXXXX by default; the CSP tokenizer implements only \n, \t, \r, \\ and
+		// the quote escape, and falls through to `value += char` for the rest.
+		// AlpineCsp::JSON_FLAGS exists to keep this string out of the attribute.
+		// ---
+		const escaped = `$showField({"if":{"referrer":"equals Ren\\u00e9"}}, $data, 'referrer_note')`;
+
+		// The escape survives as the literal `Renu00e9` — the backslash is
+		// dropped and the digits are kept — so the condition no longer matches
+		// a scope value of `René` and the field would vanish in production.
+		expect(evaluateCapturingError(scopedElement({ referrer: 'René' }), escaped).value).toBe(false);
+
+		// Positive control: the same condition written without the escape does
+		// match, so the false above is the mangling and not a broken fixture.
+		expect(evaluateCapturingError(scopedElement({ referrer: 'René' }), EMITTED).value).toBe(true);
+	});
+});
+
+describe('the magic failure mode', () => {
+	it('fails open when the evaluator throws', () => {
+		// A form whose fields all evaluate false renders no inputs at all — the
+		// worse outcome on a patient-facing site, so the magic shows the field.
+		// A null field path is the one throw the evaluator raises by design.
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+
+		const thrower = `$showField({"if":{"referrer":"equals René"}}, $data, null)`;
+
+		const { value, error } = evaluateCapturingError(scopedElement(), thrower);
+
+		expect(error).toBeNull();
+		expect(value).toBe(true);
+		expect(console.error).toHaveBeenCalledTimes(1);
+	});
+
+	it('does not depend on a Statamic global existing', () => {
+		// The point of #1956: the vendor bundle that used to define this is no
+		// longer loaded on public pages at all.
+		delete window.Statamic;
+
+		const { value, error } = evaluateCapturingError(scopedElement({ referrer: 'René' }), EMITTED);
+
+		expect(error).toBeNull();
+		expect(value).toBe(true);
+	});
+});
+
+describe('the rendered form', () => {
+	it('renders a conditional field whose condition passes', async () => {
+		// The observable symptom the blocker produced was a form with a heading
+		// and a Submit button and no inputs, so assert on the rendered DOM.
+		document.body.innerHTML = `
+			<form x-data='{"referrer":"René","referrer_note":null}'>
+				<template x-if="${EMITTED.replace(/"/g, '&quot;')}">
+					<input name="referrer_note">
+				</template>
+			</form>
+		`;
+
+		Alpine.initTree(document.querySelector('form'));
+		await Alpine.nextTick();
+
+		expect(document.querySelector('input[name="referrer_note"]')).not.toBeNull();
+	});
+
+	it('hides a conditional field whose condition fails', async () => {
+		// ---
+		// Anchor the negative on positive evidence. An absent input is equally
+		// consistent with "Alpine never ran", "the magic was not registered"
+		// and "the expression threw" — the exact failures this suite exists to
+		// catch. So the same form carries a second field whose condition
+		// PASSES: its presence proves the tree initialized and the magic
+		// resolved, which makes the first field's absence attributable to the
+		// condition evaluating false.
+		// ---
+		const always = `$showField({"if":{"referrer":"equals someone else"}}, $data, 'always_note')`;
+
+		document.body.innerHTML = `
+			<form x-data='{"referrer":"someone else","referrer_note":null,"always_note":null}'>
+				<template x-if="${EMITTED.replace(/"/g, '&quot;')}">
+					<input name="referrer_note">
+				</template>
+				<template x-if="${always.replace(/"/g, '&quot;')}">
+					<input name="always_note">
+				</template>
+			</form>
+		`;
+
+		Alpine.initTree(document.querySelector('form'));
+		await Alpine.nextTick();
+
+		expect(document.querySelector('input[name="referrer_note"]')).toBeNull();
+		expect(document.querySelector('input[name="always_note"]')).not.toBeNull();
+	});
+});

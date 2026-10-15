@@ -6,6 +6,7 @@
         "statamic-addon"
     ],
     "type": "statamic-addon",
+    "license": "MIT",
     "homepage": "https://github.com/UAMS-Web/statamic-alpine-csp-forms",
     "authors": [
         {

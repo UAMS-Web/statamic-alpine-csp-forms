@@ -4,6 +4,8 @@ A Statamic add-on that gives public forms a JavaScript driver safe under a Conte
 
 Statamic's stock `alpine` driver emits attribute expressions that the `@alpinejs/csp` build refuses to evaluate, so every conditional field on a public form fails to render. `alpine_csp` re-renders the two expressions that matter, and the add-on's front-end script supplies the `$showField` Alpine magic they call. If Statamic ships a CSP-safe driver of its own, removing this add-on returns the site to the stock driver.
 
+Releases are 0.x pre-releases until 1.0.0: a minor release can carry a breaking change, and its release notes call it out first with the action to take.
+
 ## Requirements
 
 PHP 8.4 or later and Statamic 6.35 or later. The host loads Alpine itself, using the `@alpinejs/csp` build.
@@ -38,4 +40,6 @@ The script registers the `$showField` magic when Alpine dispatches `alpine:init`
 
 Developing against a host application is covered in [the development guide](docs/DEVELOPMENT.md), and the Packagist and Marketplace steps in [the submission checklist](docs/SUBMISSION.md). `npm run build` writes both the Control Panel build and the front-end script to `resources/dist`, which is committed.
 
-The license is not yet chosen; it waits on the general decision from UAMS legal in [`UAMS-Web/uams-statamic#3039`](https://github.com/UAMS-Web/uams-statamic/issues/3039).
+## License
+
+MIT. See [`LICENSE`](LICENSE).

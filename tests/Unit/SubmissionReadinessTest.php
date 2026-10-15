@@ -7,9 +7,8 @@ declare(strict_types=1);
  * prerequisite for a public package. The test fails when one is dropped; it does
  * not submit anything.
  *
- * `license` is not in the list yet: add it to the field list below in the same
- * change that adds it to `composer.json`, once UAMS legal has decided
- * (UAMS-Web/uams-statamic#3039).
+ * `license` is in the list: MIT, chosen to match `statamic-multisite-forms` ahead of
+ * the general decision in UAMS-Web/uams-statamic#3039 (see `docs/DECISIONS.md`).
  *
  * @command  vendor/bin/pest tests/Unit/SubmissionReadinessTest.php
  */
@@ -29,7 +28,7 @@ it('declares every top-level field a public package needs', function (string $fi
     // Expect the field present and filled in
     expect(submissionManifest())->toHaveKey($field);
     expect(submissionManifest()[$field])->not->toBeEmpty();
-})->with(['name', 'description', 'keywords', 'type', 'authors', 'support', 'autoload']);
+})->with(['name', 'description', 'keywords', 'type', 'license', 'authors', 'support', 'autoload']);
 
 it('is a statamic-addon under the uams-web vendor', function (): void {
     // Read the manifest

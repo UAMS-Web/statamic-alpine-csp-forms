@@ -1,12 +1,12 @@
 {
-    "name": "uams-web/statamic-addon-template",
-    "description": "Starting point for UAMS Statamic add-ons. Replace this description when you start an add-on from it.",
+    "name": "uams-web/statamic-alpine-csp-forms",
+    "description": "CSP-safe Alpine form JavaScript driver for Statamic public forms, with its browser-side field-conditions evaluator.",
     "keywords": [
         "statamic",
         "statamic-addon"
     ],
     "type": "statamic-addon",
-    "homepage": "https://github.com/UAMS-Web/statamic-addon-template",
+    "homepage": "https://github.com/UAMS-Web/statamic-alpine-csp-forms",
     "authors": [
         {
             "name": "UAMS Web Services"
@@ -17,27 +17,27 @@
         }
     ],
     "support": {
-        "issues": "https://github.com/UAMS-Web/statamic-addon-template/issues",
-        "source": "https://github.com/UAMS-Web/statamic-addon-template"
+        "issues": "https://github.com/UAMS-Web/statamic-alpine-csp-forms/issues",
+        "source": "https://github.com/UAMS-Web/statamic-alpine-csp-forms"
     },
     "autoload": {
         "psr-4": {
-            "UAMSWeb\\AddonTemplate\\": "src/"
+            "UAMSWeb\\AlpineCspForms\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "UAMSWeb\\AddonTemplate\\Tests\\": "tests/"
+            "UAMSWeb\\AlpineCspForms\\Tests\\": "tests/"
         }
     },
     "extra": {
         "statamic": {
-            "name": "Addon Template",
-            "description": "Replace this description when you start an add-on from the template."
+            "name": "Alpine CSP Forms",
+            "description": "A form JS driver that works under a Content Security Policy without unsafe-eval."
         },
         "laravel": {
             "providers": [
-                "UAMSWeb\\AddonTemplate\\ServiceProvider"
+                "UAMSWeb\\AlpineCspForms\\ServiceProvider"
             ]
         },
         "composer-exit-on-patch-failure": true

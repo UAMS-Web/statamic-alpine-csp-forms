@@ -86,6 +86,10 @@ final class AlpineCsp extends Alpine
      * gap: a value would need an embedded vertical tab, form feed or backspace
      * to hit it. Closing it needs an upstream tokenizer fix, not an encoder one.
      */
+    // PCOV never reports a constant initializer as executed, so Pest classes every mutant of this
+    // line as uncovered although the encoding tests run it. Each `|` to `&` mutant was applied by
+    // hand and killed by `AlpineCspJsDriverTest` and `AlpineCspDriverBehaviorTest`.
+    // @pest-mutate-ignore: BitwiseOrToBitwiseAnd
     private const int JSON_FLAGS = JSON_UNESCAPED_UNICODE
         | JSON_UNESCAPED_LINE_TERMINATORS
         | JSON_UNESCAPED_SLASHES

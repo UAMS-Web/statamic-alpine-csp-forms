@@ -28,6 +28,10 @@ class ServiceProvider extends AddonServiceProvider
      *
      * @var array{input: list<string>, publicDirectory: string}
      */
+    // PCOV never reports a property initializer as executed, so Pest classes every mutant of this
+    // array as uncovered although `ViteBuildTest` asserts it. Each removal was applied by hand
+    // and killed by that test.
+    // @pest-mutate-ignore: RemoveArrayItem
     protected $vite = [
         'input' => [
             'resources/js/cp.js',
@@ -43,6 +47,10 @@ class ServiceProvider extends AddonServiceProvider
      *
      * @var array<string, string>
      */
+    // PCOV never reports a property initializer as executed, so Pest classes every mutant of this
+    // array as uncovered although `ServiceProviderTest` asserts it. Each mutant was applied by
+    // hand and killed by that test.
+    // @pest-mutate-ignore: RemoveArrayItem, ConcatRemoveLeft, ConcatRemoveRight, ConcatSwitchSides
     protected $publishables = [
         __DIR__.'/../resources/dist/frontend' => 'frontend',
     ];

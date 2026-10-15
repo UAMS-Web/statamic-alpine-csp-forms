@@ -154,22 +154,13 @@ describe('the CSP interpreter and the emitted expression', () => {
 		expect(error.message).toContain('Undefined variable: Statamic');
 	});
 
-	it('mangles a \\uXXXX escape, which is why the driver stops emitting them', () => {
-		// ---
-		// The second negative control. PHP's json_encode escapes non-ASCII as
-		// \uXXXX by default; the CSP tokenizer implements only \n, \t, \r, \\ and
-		// the quote escape, and falls through to `value += char` for the rest.
-		// AlpineCsp::JSON_FLAGS exists to keep this string out of the attribute.
-		// ---
+	it('decodes a Unicode escape in the updated CSP interpreter', () => {
+		// The updated Alpine CSP tokenizer decodes Unicode escapes. Keep the
+		// real interpreter covered alongside the unescaped driver output.
 		const escaped = `$showField({"if":{"referrer":"equals Ren\\u00e9"}}, $data, 'referrer_note')`;
 
-		// The escape survives as the literal `Renu00e9` — the backslash is
-		// dropped and the digits are kept — so the condition no longer matches
-		// a scope value of `René` and the field would vanish in production.
-		expect(evaluateCapturingError(scopedElement({ referrer: 'René' }), escaped).value).toBe(false);
-
-		// Positive control: the same condition written without the escape does
-		// match, so the false above is the mangling and not a broken fixture.
+		expect(evaluateCapturingError(scopedElement({ referrer: 'René' }), escaped).value).toBe(true);
+		expect(evaluateCapturingError(scopedElement({ referrer: 'Rene' }), escaped).value).toBe(false);
 		expect(evaluateCapturingError(scopedElement({ referrer: 'René' }), EMITTED).value).toBe(true);
 	});
 });

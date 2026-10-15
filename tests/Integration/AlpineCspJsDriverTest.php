@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\File;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Form;
 use Statamic\Fields\BlueprintRepository;
+use Statamic\Fields\Field;
+use Statamic\Forms\Form as FormModel;
 use Statamic\Forms\Tags as FormTags;
 use UAMSWeb\AlpineCspForms\JsDrivers\AlpineCsp;
 
@@ -305,4 +307,62 @@ it('hands the data to an Alpine.data() component when one is named', function ()
     $html = renderAlpineCspForm('alpine_csp:intake:intakeForm');
 
     expect(alpineCspAttribute($html, 'x-data'))->toStartWith('intakeForm({&quot;intake&quot;:');
+});
+
+/**
+ * The saved test form, narrowed to the concrete class the driver's constructor takes.
+ */
+function alpineCspFormModel(): FormModel
+{
+    $form = Form::find(ALPINE_CSP_FORM_HANDLE);
+    expect($form)->toBeInstanceOf(FormModel::class);
+    assert($form instanceof FormModel);
+
+    return $form;
+}
+
+/**
+ * Call one of the driver's protected render methods directly (UAMS-Web/uams-statamic#3090).
+ * The cases below reach inputs `{{ form:create }}` never produces, which is why they do not
+ * render through it like the cases above.
+ *
+ * @param  list<string>  $options  The driver options, as `js="alpine_csp:<scope>:<component>"` splits them.
+ * @param  list<mixed>  $arguments
+ */
+function callAlpineCspDriver(string $method, array $arguments, array $options = []): mixed
+{
+    makeAlpineCspForm();
+    $driver = new AlpineCsp(alpineCspFormModel(), $options);
+
+    return new ReflectionMethod($driver, $method)->invoke($driver, ...$arguments);
+}
+
+it('keeps the binding of a bracketed handle that is not a replicator subfield', function (): void {
+    makeAlpineCspForm();
+    $driver = new AlpineCsp(alpineCspFormModel());
+
+    $attributes = $driver->addToRenderableFieldAttributes(new Field('notes[extra]', ['type' => 'text']));
+
+    expect($attributes)->toBe(['x-model' => 'notes[extra]']);
+});
+
+it('adds no binding for a field whose fieldtype has none', function (): void {
+    makeAlpineCspForm();
+    $driver = new AlpineCsp(alpineCspFormModel());
+
+    expect($driver->addToRenderableFieldAttributes(new Field('address', ['type' => 'group'])))->toBe([]);
+});
+
+it('renders an empty handle in the show-field call when the field has none', function (): void {
+    expect(callAlpineCspDriver('renderAlpineShowFieldJs', [new Field(null, ['type' => 'text']), null]))
+        ->toBe("\$showField([], \$data, '')");
+});
+
+it('renders bare x-data when the component option is empty', function (): void {
+    expect(callAlpineCspDriver('renderAlpineXData', [['a' => 1], null], ['', '']))
+        ->toBe('{&quot;a&quot;:1}');
+});
+
+it('renders an empty object when the x-data cannot be encoded as JSON', function (): void {
+    expect(callAlpineCspDriver('renderAlpineXData', [['a' => INF], null]))->toBe('{}');
 });

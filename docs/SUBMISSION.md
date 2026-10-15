@@ -6,8 +6,8 @@ Each step is marked **Person** when it needs someone with an account, or **Repo*
 
 ## Before anything is submitted
 
-1. **Repo.** The README describes only what exists, and the features it lists are real. It states the PHP and `statamic/cms` floors, the install command, and links the license once there is one. `tests/Unit/ReadmeTest.php` pins these. Check the README again before submitting to the Marketplace.
-2. **Repo.** `composer.json` is complete for a public package: `name`, `description`, `keywords`, `type` of `statamic-addon`, `authors`, `support`, `autoload`, `extra.statamic` (`name`, `description`) and `extra.laravel.providers`, plus `license` once it is decided (UAMS-Web/uams-statamic#3039). `tests/Unit/SubmissionReadinessTest.php` pins these; add `license` to its field list in the change that adds it to `composer.json`.
+1. **Repo.** The README describes only what exists, and the features it lists are real. It states the PHP and `statamic/cms` floors, the install command, and links the license. `tests/Unit/ReadmeTest.php` pins these. Check the README again before submitting to the Marketplace.
+2. **Repo.** `composer.json` is complete for a public package: `name`, `description`, `keywords`, `type` of `statamic-addon`, `authors`, `support`, `autoload`, `extra.statamic` (`name`, `description`) and `extra.laravel.providers`, plus `license` (MIT here, see `docs/DECISIONS.md`). `tests/Unit/SubmissionReadinessTest.php` pins these.
 3. **Repo.** If the add-on has Control Panel assets, the built files are committed (`resources/dist`) and the `Built assets` job is green, because a Composer install does not run npm.
 4. **Person.** The operator decides to submit, and to Packagist and the Marketplace separately. Record the decision in `docs/DECISIONS.md`.
 

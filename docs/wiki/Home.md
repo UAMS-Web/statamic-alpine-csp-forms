@@ -1,26 +1,27 @@
-Replace this paragraph with what the add-on does and who it is for.
+Alpine CSP Forms is a Statamic add-on that gives public forms a JavaScript driver safe under a Content Security Policy without `'unsafe-eval'`. It registers the `alpine_csp` form JS driver and ships the browser-side field-conditions evaluator the driver's output calls.
 
-This wiki holds the documentation: a walkthrough, task guides by role, the reference, and troubleshooting. The [README](https://github.com/UAMS-Web/statamic-alpine-csp-forms#readme) keeps an overview, the requirements and installation.
+This wiki holds the documentation: a walkthrough, a task guide, the reference and troubleshooting. The [README](https://github.com/UAMS-Web/statamic-alpine-csp-forms#readme) keeps an overview, the requirements and the install command.
 
-The pages in this folder are skeletons, one per page shape the `github-wiki` skill describes. Copy each, fill it in, rename it for its subject, and keep Home, the sidebar and the footer listing the same pages under the same labels.
+Releases are 0.x pre-releases until 1.0.0. A minor release can carry a breaking change, and its release notes call it out first with the action to take.
 
 ## Getting started
 
-- [Installation (README)](https://github.com/UAMS-Web/statamic-alpine-csp-forms#installation): add the package to a Statamic install.
-- [Walkthrough](Walkthrough.md): a first use of the add-on, from nothing to a visible result.
+- [Installation](Installation.md): require the package, publish the script and load it before Alpine.
+- [Your first Alpine CSP form](Your-first-Alpine-CSP-form.md): render a form with a conditional field under the driver.
 
 ## Guides
 
-- [Task guide](Task-guide.md): one task, the steps, and the reference it used.
-
-## Troubleshooting
-
-- [Troubleshooting](Troubleshooting.md): one entry per symptom, with its cause and fix.
+- [Selecting the driver on a form](Selecting-the-driver-on-a-form.md): the form tag, a scope, and a named component.
 
 ## Reference
 
-- [Reference](Reference.md): every setting, tag, command or permission of one area.
+- [Driver reference](Driver-reference.md): what the driver changes in a form's markup, and why.
+
+## Troubleshooting
+
+- [Troubleshooting](Troubleshooting.md): one entry per symptom, from what you see to its cause and fix.
 
 ## Project
 
+- [Development](Development.md): building and testing the add-on, and working against a host.
 - [Project](Project.md): where the add-on is developed and how to report a problem.

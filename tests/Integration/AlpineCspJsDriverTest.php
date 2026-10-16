@@ -315,8 +315,10 @@ it('hands the data to an Alpine.data() component when one is named', function ()
 function alpineCspFormModel(): FormModel
 {
     $form = Form::find(ALPINE_CSP_FORM_HANDLE);
-    expect($form)->toBeInstanceOf(FormModel::class);
-    assert($form instanceof FormModel);
+
+    if (! $form instanceof FormModel) {
+        throw new RuntimeException('expected the saved test form to be a '.FormModel::class);
+    }
 
     return $form;
 }

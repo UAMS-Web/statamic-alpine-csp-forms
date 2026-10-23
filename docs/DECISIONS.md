@@ -45,3 +45,13 @@ Oldest first, one entry per closed decision, so **a new entry is appended to the
 **Rejected.** Waiting for `UAMS-Web/uams-statamic#3039` before submitting: it blocks the site half with no date. Submitting with no license: the package would be listed with none declared, which leaves hosts without terms to depend on. Choosing a different license from `statamic-multisite-forms`: two add-ons from one organization under different terms, with no decision behind the difference. If `UAMS-Web/uams-statamic#3039` decides differently, both add-ons change together.
 
 **Companion.** `UAMS-Web/statamic-alpine-csp-forms#6`, `UAMS-Web/uams-statamic#3039`.
+
+## 2026-10-22: The ruleset requires one aggregate check, and the drift check is removed (UAMS-Web/uams-claude-skills#301)
+
+**Decision.** `ci.yml` ends in a `CI` job that `needs:` every other job and fails unless each reports `success`. The organization ruleset for this repository requires `CI`, `Attribution footer` and `Closing keywords` and no per-job name. `check-required-checks.yml`, `scripts/check-required-checks.mjs` and its test are removed.
+
+**Why.** The ruleset listed one name per job, so every rename or added job meant editing the ruleset, and the drift check existed only to report when the two lists disagreed. With one aggregate name the lists cannot disagree: a job missing from the `needs:` list of `CI` is the only drift left, and the template in `UAMS-Web/uams-claude-skills` covers that.
+
+**Rejected.** Keeping the drift check beside the aggregate: it would compare a list of three names with job names it no longer has to match. Gating `CI` on a remote-CI variable: this repository is public and runs every job on every pull request.
+
+**Companion.** `UAMS-Web/uams-claude-skills#301`, `#292`, `#169`; `UAMS-Web/statamic-multisite-forms#198`.

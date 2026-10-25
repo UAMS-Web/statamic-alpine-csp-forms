@@ -17,7 +17,7 @@ The `alpine_csp` driver extends Statamic's stock Alpine driver and changes only 
 
 ## The `$showField` magic
 
-The front-end script, `alpine-csp.js`, registers `$showField` when Alpine dispatches `alpine:init`. It evaluates a field's conditions against the form's data with the same rules as Statamic's own field conditions; a test in the add-on compares its vocabulary with Statamic's constants. If the evaluator throws, the field is shown rather than hidden.
+The front-end script, `alpine-csp.js`, registers `$showField` when Alpine dispatches `alpine:init`. It forwards each call to `Statamic.$conditions.showField`, which Statamic's front-end `helpers.js` defines, so public forms evaluate conditions with the same code as the Control Panel. If `helpers.js` is not loaded, every conditional field is shown and the console reports the missing script once. If the evaluator throws, the field is shown rather than hidden.
 
 ## Files
 
@@ -25,4 +25,4 @@ The front-end script, `alpine-csp.js`, registers `$showField` when Alpine dispat
 | --- | --- |
 | `public/vendor/statamic-alpine-csp-forms/frontend/alpine-csp.js` | The published front-end script. |
 | `resources/js/alpine-csp.js` | The script's source, for a host that bundles it. |
-| `resources/js/conditions/` | The evaluator the magic calls. |
+| `resources/js/conditions/showFieldMagic.js` | The magic, which forwards to Statamic's evaluator. |

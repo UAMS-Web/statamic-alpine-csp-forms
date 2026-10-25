@@ -1,6 +1,6 @@
 {
     "name": "uams-web/statamic-alpine-csp-forms",
-    "description": "CSP-safe Alpine form JavaScript driver for Statamic public forms, with its browser-side field-conditions evaluator.",
+    "description": "CSP-safe Alpine form JavaScript driver for Statamic public forms, with a $showField magic that forwards to Statamic's field-conditions evaluator.",
     "keywords": [
         "statamic",
         "statamic-addon"
@@ -45,7 +45,7 @@
     },
     "require": {
         "php": "^8.4",
-        "statamic/cms": "^6.35"
+        "statamic/cms": "^6.35.1"
     },
     "require-dev": {
         "cweagans/composer-patches": "^2.0",

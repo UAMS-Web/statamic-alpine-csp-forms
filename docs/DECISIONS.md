@@ -55,3 +55,13 @@ Oldest first, one entry per closed decision, so **a new entry is appended to the
 **Rejected.** Keeping the drift check beside the aggregate: it would compare a list of three names with job names it no longer has to match. Gating `CI` on a remote-CI variable: this repository is public and runs every job on every pull request.
 
 **Companion.** `UAMS-Web/uams-claude-skills#301`, `#292`, `#169`; `UAMS-Web/statamic-multisite-forms#198`.
+
+## 2026-10-25: `$showField` forwards to Statamic's evaluator, and the add-on's copy is removed (UAMS-Web/statamic-alpine-csp-forms#18)
+
+**Decision.** The `$showField` magic forwards to `window.Statamic.$conditions.showField`, which Statamic's front-end `helpers.js` defines, and the add-on's own evaluator and its constants-parity test are deleted. The add-on requires `statamic/cms` `^6.35.1`, and the host loads `helpers.js` ahead of the add-on's script. When the global is missing the magic shows the field and logs one console error naming `helpers.js`.
+
+**Why.** The copy existed because Statamic's evaluator decided every comparison with `eval()`, which `statamic/cms#15564` removed in `v6.35.1`. Keeping it meant the Control Panel and public pages evaluated conditions with different code, and the parity test pinned only the vocabulary, so a semantic change upstream would make the two disagree silently.
+
+**Rejected.** Keeping the copy: the drift above, for a 24,845-byte vendor bundle (8,037 gzipped) a host can load instead. Bundling `helpers.js` into the add-on's script: it would duplicate a file Statamic already publishes and tie the add-on's release to Statamic's. Failing closed when the global is missing: a form with no inputs is the worse outcome on a patient-facing site.
+
+**Companion.** `UAMS-Web/statamic-alpine-csp-forms#18`, `UAMS-Web/uams-statamic#1931`.

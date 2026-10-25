@@ -8,7 +8,7 @@ npm ci
 composer ci
 ```
 
-`composer ci` runs the repository guards, the Vitest suite for the evaluator, Pint, Rector, Larastan and the Pest `Unit` and `Integration` suites in parallel. `npm ci` needs `vendor/statamic/cms`, because `@statamic/cms` is a `file:` link into it, so run `composer install` first. `composer mutate` runs Pest mutation testing over `src/` and needs a coverage driver (PCOV).
+`composer ci` runs the repository guards, the Vitest suite for the `$showField` magic, Pint, Rector, Larastan and the Pest `Unit` and `Integration` suites in parallel. `npm ci` needs `vendor/statamic/cms`, because `@statamic/cms` is a `file:` link into it, so run `composer install` first. `composer mutate` runs Pest mutation testing over `src/` and needs a coverage driver (PCOV).
 
 ## Building the front-end script
 

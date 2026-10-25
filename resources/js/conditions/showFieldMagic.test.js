@@ -39,8 +39,8 @@ const EMITTED = `$showField({"if":{"referrer":"equals René"}}, $data, 'referrer
 /** The expression Statamic's stock `alpine` driver emits for the same field. */
 const STOCK = `Statamic.$conditions.showField({"if":{"referrer":"equals René"}}, $data, 'referrer_note')`;
 
-// Register once — magics live on a module-level registry, and re-registering
-// the same name in each test would just overwrite it.
+// Register the shared magic. Magics live on a module-level registry, so a test
+// that needs a fresh once-only report re-registers and replaces it.
 registerShowFieldMagic(Alpine);
 
 /**
@@ -219,11 +219,47 @@ describe('forwarding to Statamic', () => {
 	});
 });
 
+describe('custom conditions', () => {
+	const CUSTOM = `$showField({"if":{"referrer":"custom isRene"}}, $data, 'referrer_note')`;
+
+	afterEach(() => {
+		delete window.StatamicCustomConditions;
+	});
+
+	it('looks a custom condition up in window.StatamicCustomConditions', () => {
+		const isRene = vi.fn(({ target }) => target === 'René');
+		window.StatamicCustomConditions = { isRene };
+
+		expect(evaluateCapturingError(scopedElement({ referrer: 'René' }), CUSTOM).value).toBe(true);
+		expect(evaluateCapturingError(scopedElement({ referrer: 'Rene' }), CUSTOM).value).toBe(false);
+		expect(isRene).toHaveBeenCalled();
+	});
+
+	it('hides the field and names the condition when it is not registered', () => {
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+
+		const { value, error } = evaluateCapturingError(scopedElement(), CUSTOM);
+
+		expect(error).toBeNull();
+		expect(value).toBe(false);
+		expect(console.error.mock.calls.flat().join(' ')).toContain('isRene');
+	});
+
+	it('keeps a get() the evaluator already has', () => {
+		const own = vi.fn(() => () => false);
+		window.Statamic.$conditions.get = own;
+		window.StatamicCustomConditions = { isRene: () => true };
+
+		expect(evaluateCapturingError(scopedElement({ referrer: 'René' }), CUSTOM).value).toBe(false);
+		expect(own).toHaveBeenCalledWith('isRene');
+	});
+});
+
 describe('the magic failure mode', () => {
 	it('fails open when the evaluator throws', () => {
 		// A form whose fields all evaluate false renders no inputs at all, the
 		// worse outcome on a patient-facing site, so the magic shows the field.
-		// A null field path is the one throw the evaluator raises by design.
+		// A null field path makes Statamic's evaluator throw.
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 
 		const thrower = `$showField({"if":{"referrer":"equals René"}}, $data, null)`;

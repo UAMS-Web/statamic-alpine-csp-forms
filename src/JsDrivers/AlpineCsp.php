@@ -36,8 +36,9 @@ use Statamic\Forms\JsDrivers\Alpine;
  * global is reached from module scope instead: this driver emits a call to the
  * `$showField` Alpine magic registered in
  * `resources/js/conditions/showFieldMagic.js`, which forwards to
- * `window.Statamic.$conditions.showField` from Statamic's `helpers.js`. The signature and argument order are unchanged, so scoped
- * forms (`js="alpine_csp:intake"`) keep working — only the callee moves.
+ * `window.Statamic.$conditions.showField` from Statamic's `helpers.js`. The
+ * signature and argument order are unchanged, so scoped forms
+ * (`js="alpine_csp:intake"`) keep working: only the callee moves.
  *
  * ## Why the JSON encoding is re-rendered
  *

@@ -35,6 +35,16 @@
  * same code (UAMS-Web/uams-statamic#1931). The host therefore loads
  * `helpers.js` ahead of this script.
  *
+ * CUSTOM CONDITIONS
+ *
+ * `helpers.js` looks a `custom` condition up with `Statamic.$conditions.get()`,
+ * but the front-end `$conditions` object defines only `showField()`; `get()`
+ * and `add()` exist in the Control Panel alone. So where `get()` is missing the
+ * magic supplies one that reads `window.StatamicCustomConditions`, the registry
+ * a host writes its public-page custom conditions to. An unregistered name
+ * then reaches `helpers.js`'s own "was not properly defined" error and hides
+ * the field, as it does in the Control Panel.
+ *
  * FAILURE MODE
  *
  * Every failure shows the field rather than hiding it. Failing open degrades
@@ -49,6 +59,20 @@
 
 /** The script that defines `window.Statamic.$conditions`, named in the missing-global error. */
 export const HELPERS_SCRIPT = '/vendor/statamic/frontend/js/helpers.js';
+
+/**
+ * Give Statamic's front-end evaluator a custom-condition lookup where it has none.
+ *
+ * Leaves an existing `get()` alone, so a page that also loads the Control
+ * Panel's condition registry keeps it.
+ *
+ * @param {{ get?: unknown }} conditions  `window.Statamic.$conditions`
+ */
+function ensureCustomConditionLookup(conditions) {
+	if (typeof conditions.get !== 'function') {
+		conditions.get = (name) => window.StatamicCustomConditions?.[name];
+	}
+}
 
 /**
  * Register the `$showField` magic on an Alpine instance.
@@ -78,6 +102,8 @@ export function registerShowFieldMagic(Alpine) {
 		}
 
 		try {
+			ensureCustomConditionLookup(evaluator);
+
 			return evaluator.showField(conditions, data, currentFieldPath);
 		} catch (error) {
 			// Fail open, see the FAILURE MODE note above.

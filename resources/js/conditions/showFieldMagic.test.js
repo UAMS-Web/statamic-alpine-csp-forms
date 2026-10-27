@@ -4,18 +4,34 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import Alpine from '@alpinejs/csp';
 
-import { registerShowFieldMagic } from './showFieldMagic.js';
+// Statamic's front-end helpers bundle, as installed with `statamic/cms`, read as text.
+import HELPERS_SOURCE from '../../../vendor/statamic/cms/resources/dist-frontend/js/helpers.js?raw';
+
+import { HELPERS_SCRIPT, registerShowFieldMagic } from './showFieldMagic.js';
 
 /**
  * Integration coverage for the `$showField` magic against the REAL
- * `@alpinejs/csp` runtime (#1859).
+ * `@alpinejs/csp` runtime and Statamic's REAL front-end `helpers.js`.
  *
  * The magic exists because the CSP build's AST interpreter refuses the
  * expression Statamic's stock Alpine driver emits. Stubbing Alpine here would
  * assert nothing about that refusal, so these boot the actual interpreter and
- * evaluate the actual attribute strings `UAMSWeb\AlpineCspForms\JsDrivers\AlpineCsp` renders
- * — including a negative control proving the stock expression still fails.
+ * evaluate the actual attribute strings `UAMSWeb\AlpineCspForms\JsDrivers\AlpineCsp` renders,
+ * including a negative control proving the stock expression still fails. The
+ * evaluator the magic forwards to is the installed `statamic/cms` copy of
+ * `helpers.js`, so a semantic change upstream shows up here.
  */
+
+/**
+ * Define `window.Statamic` the way a page that loads `helpers.js` does.
+ *
+ * The bundle is a UMD wrapper that assigns `window.Statamic` when no AMD
+ * loader is present, so running its source is all a page does with it.
+ */
+function loadStatamicHelpers() {
+	// eslint-disable-next-line no-new-func
+	new Function(HELPERS_SOURCE)();
+}
 
 /** The expression AlpineCsp emits for a conditional field. */
 const EMITTED = `$showField({"if":{"referrer":"equals René"}}, $data, 'referrer_note')`;
@@ -23,8 +39,8 @@ const EMITTED = `$showField({"if":{"referrer":"equals René"}}, $data, 'referrer
 /** The expression Statamic's stock `alpine` driver emits for the same field. */
 const STOCK = `Statamic.$conditions.showField({"if":{"referrer":"equals René"}}, $data, 'referrer_note')`;
 
-// Register once — magics live on a module-level registry, and re-registering
-// the same name in each test would just overwrite it.
+// Register the shared magic. Magics live on a module-level registry, so a test
+// that needs a fresh once-only report re-registers and replaces it.
 registerShowFieldMagic(Alpine);
 
 /**
@@ -80,17 +96,17 @@ function evaluateCapturingError(el, expression) {
 beforeEach(() => {
 	document.body.innerHTML = '';
 
-	// Present ONLY so the stock-expression negative control below fails on the
-	// CSP scope rule rather than on a missing global. Nothing in the evaluated
-	// path reads it any more — #1956 moved the evaluator in-repo and dropped
-	// the vendor bundle that used to define it.
-	window.Statamic = { $conditions: {} };
+	// The real global, so the evaluated path is Statamic's own evaluator and
+	// the stock-expression negative control below fails on the CSP scope rule
+	// rather than on a missing global.
+	loadStatamicHelpers();
 
 	Alpine.setErrorHandler(throwOnExpressionError);
 });
 
 afterEach(() => {
 	delete window.Statamic;
+	vi.restoreAllMocks();
 });
 
 describe('the CSP interpreter and the emitted expression', () => {
@@ -165,11 +181,85 @@ describe('the CSP interpreter and the emitted expression', () => {
 	});
 });
 
+describe('forwarding to Statamic', () => {
+	it('returns what Statamic.$conditions.showField returns, for the same arguments', () => {
+		// A stub that answers something the real evaluator never would, so a
+		// magic that evaluated on its own could not produce it.
+		const answer = { forwarded: true };
+		const showField = vi.fn(() => answer);
+		window.Statamic = { $conditions: { showField } };
+
+		const data = { referrer: 'René' };
+		const el = scopedElement(data);
+
+		const { value, error } = evaluateCapturingError(el, EMITTED);
+
+		expect(error).toBeNull();
+		expect(value).toBe(answer);
+		expect(showField).toHaveBeenCalledTimes(1);
+
+		const [conditions, scope, path] = showField.mock.calls[0];
+		expect(conditions).toEqual({ if: { referrer: 'equals René' } });
+		expect(scope.referrer).toBe('René');
+		expect(path).toBe('referrer_note');
+	});
+
+	it('reads the global at call time, so helpers.js may load after registration', () => {
+		delete window.Statamic;
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+
+		// Register on a fresh name-space by re-registering: the missing-global
+		// report is per registration, and the shared one may have reported.
+		registerShowFieldMagic(Alpine);
+		expect(evaluateCapturingError(scopedElement({ referrer: 'Rene' }), EMITTED).value).toBe(true);
+
+		loadStatamicHelpers();
+
+		expect(evaluateCapturingError(scopedElement({ referrer: 'Rene' }), EMITTED).value).toBe(false);
+	});
+});
+
+describe('custom conditions', () => {
+	const CUSTOM = `$showField({"if":{"referrer":"custom isRene"}}, $data, 'referrer_note')`;
+
+	afterEach(() => {
+		delete window.StatamicCustomConditions;
+	});
+
+	it('looks a custom condition up in window.StatamicCustomConditions', () => {
+		const isRene = vi.fn(({ target }) => target === 'René');
+		window.StatamicCustomConditions = { isRene };
+
+		expect(evaluateCapturingError(scopedElement({ referrer: 'René' }), CUSTOM).value).toBe(true);
+		expect(evaluateCapturingError(scopedElement({ referrer: 'Rene' }), CUSTOM).value).toBe(false);
+		expect(isRene).toHaveBeenCalled();
+	});
+
+	it('hides the field and names the condition when it is not registered', () => {
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+
+		const { value, error } = evaluateCapturingError(scopedElement(), CUSTOM);
+
+		expect(error).toBeNull();
+		expect(value).toBe(false);
+		expect(console.error.mock.calls.flat().join(' ')).toContain('isRene');
+	});
+
+	it('keeps a get() the evaluator already has', () => {
+		const own = vi.fn(() => () => false);
+		window.Statamic.$conditions.get = own;
+		window.StatamicCustomConditions = { isRene: () => true };
+
+		expect(evaluateCapturingError(scopedElement({ referrer: 'René' }), CUSTOM).value).toBe(false);
+		expect(own).toHaveBeenCalledWith('isRene');
+	});
+});
+
 describe('the magic failure mode', () => {
 	it('fails open when the evaluator throws', () => {
-		// A form whose fields all evaluate false renders no inputs at all — the
+		// A form whose fields all evaluate false renders no inputs at all, the
 		// worse outcome on a patient-facing site, so the magic shows the field.
-		// A null field path is the one throw the evaluator raises by design.
+		// A null field path makes Statamic's evaluator throw.
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 
 		const thrower = `$showField({"if":{"referrer":"equals René"}}, $data, null)`;
@@ -181,15 +271,25 @@ describe('the magic failure mode', () => {
 		expect(console.error).toHaveBeenCalledTimes(1);
 	});
 
-	it('does not depend on a Statamic global existing', () => {
-		// The point of #1956: the vendor bundle that used to define this is no
-		// longer loaded on public pages at all.
+	it('shows every field and logs one error naming helpers.js when window.Statamic is absent', () => {
 		delete window.Statamic;
+		vi.spyOn(console, 'error').mockImplementation(() => {});
 
-		const { value, error } = evaluateCapturingError(scopedElement({ referrer: 'René' }), EMITTED);
+		// A fresh registration, so the once-only report has not fired yet.
+		registerShowFieldMagic(Alpine);
 
-		expect(error).toBeNull();
-		expect(value).toBe(true);
+		const failing = `$showField({"if":{"referrer":"equals someone else"}}, $data, 'referrer_note')`;
+
+		for (const expression of [EMITTED, failing, EMITTED]) {
+			const { value, error } = evaluateCapturingError(scopedElement({ referrer: 'René' }), expression);
+
+			expect(error).toBeNull();
+			expect(value).toBe(true);
+		}
+
+		expect(console.error).toHaveBeenCalledTimes(1);
+		expect(console.error.mock.calls[0][0]).toContain('helpers.js');
+		expect(console.error.mock.calls[0][0]).toContain(HELPERS_SCRIPT);
 	});
 });
 

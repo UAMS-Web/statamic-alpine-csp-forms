@@ -35,9 +35,10 @@ use Statamic\Forms\JsDrivers\Alpine;
  * The CSP restriction is on *attribute expressions*, not on JS modules, so the
  * global is reached from module scope instead: this driver emits a call to the
  * `$showField` Alpine magic registered in
- * `resources/js/conditions/showFieldMagic.js`, which closes over
- * `window.Statamic`. The signature and argument order are unchanged, so scoped
- * forms (`js="alpine_csp:intake"`) keep working — only the callee moves.
+ * `resources/js/conditions/showFieldMagic.js`, which forwards to
+ * `window.Statamic.$conditions.showField` from Statamic's `helpers.js`. The
+ * signature and argument order are unchanged, so scoped forms
+ * (`js="alpine_csp:intake"`) keep working: only the callee moves.
  *
  * ## Why the JSON encoding is re-rendered
  *

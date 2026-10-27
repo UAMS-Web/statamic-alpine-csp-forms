@@ -2,6 +2,7 @@ Written against v0.1.0.
 
 - [A form renders with no inputs](#a-form-renders-with-no-inputs)
 - [Conditional fields never appear](#conditional-fields-never-appear)
+- [Every conditional field appears](#every-conditional-field-appears)
 - [The script answers 404](#the-script-answers-404)
 - [A non-ASCII value changes after a failed submit](#a-non-ascii-value-changes-after-a-failed-submit)
 
@@ -20,6 +21,14 @@ The form renders, but a field with a condition stays hidden whatever the visitor
 **Cause:** the front-end script is not loaded, or it loads after Alpine has started, so `$showField` is not registered when the page's expressions are evaluated.
 
 **Fix:** load `alpine-csp.js` as a deferred script before the host's own Alpine bundle, and set `window.Alpine` before `Alpine.start()`. See [Installation](Installation.md#load-the-script).
+
+## Every conditional field appears
+
+The form shows every field whatever the visitor chooses, and the browser console reports `Statamic's field-conditions evaluator is missing`.
+
+**Cause:** Statamic's `helpers.js` is not loaded, so `$showField` has no evaluator to forward to and shows each field rather than hiding it.
+
+**Fix:** load `/vendor/statamic/frontend/js/helpers.js` as a deferred script before `alpine-csp.js`. See [Installation](Installation.md#load-the-script).
 
 ## The script answers 404
 

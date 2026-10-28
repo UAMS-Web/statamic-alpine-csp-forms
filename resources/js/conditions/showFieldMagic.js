@@ -32,7 +32,7 @@
  * that evaluator decided every comparison with `eval()`, so the add-on carried
  * its own copy; `statamic/cms#15564` removed the `eval()`, and the copy was
  * retired so the Control Panel and public pages evaluate conditions with the
- * same code (UAMS-Web/uams-statamic#1931). The host therefore loads
+ * same code (UAMS-Web/uams-statamic#189). The host therefore loads
  * `helpers.js` ahead of this script.
  *
  * CUSTOM CONDITIONS

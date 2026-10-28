@@ -30,21 +30,21 @@ Oldest first, one entry per closed decision, so **a new entry is appended to the
 
 **Decision.** This repository started from `UAMS-Web/statamic-addon-template`. It carries no synced files (`.agents/`, `.claude/`, `.cursor/`) and no `LICENSE`, and `composer.json` has no `license` field.
 
-**Why.** The shared rules and skills reach a repository by onboarding it to the sync in `UAMS-Web/uams-claude-skills`, not by copying a snapshot that goes stale. The license waits on the general decision from UAMS legal in `UAMS-Web/uams-statamic#3039`.
+**Why.** The shared rules and skills reach a repository by onboarding it to the sync in `UAMS-Web/uams-claude-skills`, not by copying a snapshot that goes stale. The license waits on the general decision from UAMS legal in `UAMS-Web/uams-statamic#261`.
 
 **Rejected.** Snapshotting the synced files into the template: every new add-on would begin with a stale copy that conflicts with its first sync pull request. Copying a license from an existing add-on: legal has not decided which license applies.
 
-**Companion.** `UAMS-Web/uams-statamic#3039`.
+**Companion.** `UAMS-Web/uams-statamic#261`.
 
 ## 2026-10-15: Submit to Packagist, and license under MIT (UAMS-Web/statamic-alpine-csp-forms#6)
 
 **Decision.** The add-on is submitted to Packagist, and its first release is a 0.x pre-release. It is licensed under MIT, with the same `LICENSE` text and holder line as `UAMS-Web/statamic-multisite-forms`, declared in `composer.json` (`"license": "MIT"`), the README and `SubmissionReadinessTest`. The Marketplace is not part of this decision.
 
-**Why.** The site half of `UAMS-Web/uams-statamic#3073` requires the package by name, which needs it on Packagist. MIT matches the license `statamic-multisite-forms` already ships, so the two add-ons are consistent while the general decision from UAMS legal in `UAMS-Web/uams-statamic#3039` is still open.
+**Why.** The site half of `UAMS-Web/uams-statamic-archive#3073` requires the package by name, which needs it on Packagist. MIT matches the license `statamic-multisite-forms` already ships, so the two add-ons are consistent while the general decision from UAMS legal in `UAMS-Web/uams-statamic#261` is still open.
 
-**Rejected.** Waiting for `UAMS-Web/uams-statamic#3039` before submitting: it blocks the site half with no date. Submitting with no license: the package would be listed with none declared, which leaves hosts without terms to depend on. Choosing a different license from `statamic-multisite-forms`: two add-ons from one organization under different terms, with no decision behind the difference. If `UAMS-Web/uams-statamic#3039` decides differently, both add-ons change together.
+**Rejected.** Waiting for `UAMS-Web/uams-statamic#261` before submitting: it blocks the site half with no date. Submitting with no license: the package would be listed with none declared, which leaves hosts without terms to depend on. Choosing a different license from `statamic-multisite-forms`: two add-ons from one organization under different terms, with no decision behind the difference. If `UAMS-Web/uams-statamic#261` decides differently, both add-ons change together.
 
-**Companion.** `UAMS-Web/statamic-alpine-csp-forms#6`, `UAMS-Web/uams-statamic#3039`.
+**Companion.** `UAMS-Web/statamic-alpine-csp-forms#6`, `UAMS-Web/uams-statamic#261`.
 
 ## 2026-10-22: The ruleset requires one aggregate check, and the drift check is removed (UAMS-Web/uams-claude-skills#301)
 
@@ -64,4 +64,4 @@ Oldest first, one entry per closed decision, so **a new entry is appended to the
 
 **Rejected.** Keeping the copy: the drift above, for a 24,845-byte vendor bundle (8,037 gzipped) a host can load instead. Bundling `helpers.js` into the add-on's script: it would duplicate a file Statamic already publishes and tie the add-on's release to Statamic's. Failing closed when the global is missing: a form with no inputs is the worse outcome on a patient-facing site.
 
-**Companion.** `UAMS-Web/statamic-alpine-csp-forms#18`, `UAMS-Web/uams-statamic#1931`.
+**Companion.** `UAMS-Web/statamic-alpine-csp-forms#18`, `UAMS-Web/uams-statamic#189`.

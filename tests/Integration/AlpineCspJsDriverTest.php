@@ -14,7 +14,7 @@ use UAMSWeb\AlpineCspForms\JsDrivers\AlpineCsp;
 
 /**
  * Coverage for the CSP-safe public-form JS driver, moved from the application
- * it was extracted from (UAMS-Web/uams-statamic#1859, #3073).
+ * it was extracted from (UAMS-Web/uams-statamic-archive#1859, #3073).
  *
  * The front end runs `@alpinejs/csp`, which evaluates every `x-*` attribute with
  * an AST interpreter rather than `new Function()`. That interpreter resolves
@@ -324,7 +324,7 @@ function alpineCspFormModel(): FormModel
 }
 
 /**
- * Call one of the driver's protected render methods directly (UAMS-Web/uams-statamic#3090).
+ * Call one of the driver's protected render methods directly (UAMS-Web/uams-statamic-archive#3090).
  * The cases below reach inputs `{{ form:create }}` never produces, which is why they do not
  * render through it like the cases above.
  *

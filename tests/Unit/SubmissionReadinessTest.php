@@ -8,7 +8,7 @@ declare(strict_types=1);
  * not submit anything.
  *
  * `license` is in the list: MIT, chosen to match `statamic-multisite-forms` ahead of
- * the general decision in UAMS-Web/uams-statamic#3039 (see `docs/DECISIONS.md`).
+ * the general decision in UAMS-Web/uams-statamic#261 (see `docs/DECISIONS.md`).
  *
  * @command  vendor/bin/pest tests/Unit/SubmissionReadinessTest.php
  */

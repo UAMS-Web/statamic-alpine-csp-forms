@@ -313,7 +313,7 @@ Where untested code cannot be loaded in isolation (definitions and registrations
 
 ## Full coverage
 
-"Bring test coverage to full" means the bar below (recorded while scoping UAMS-Web/uams-statamic#2834; UAMS-Web/uams-claude-skills#9). Every repository's coverage follow-up closes against this section. A bare line-% floor or a literal `100%` mutation score is not the bar.
+"Bring test coverage to full" means the bar below (recorded while scoping UAMS-Web/uams-statamic#255; UAMS-Web/uams-claude-skills#9). Every repository's coverage follow-up closes against this section. A bare line-% floor or a literal `100%` mutation score is not the bar.
 
 ### Population
 
